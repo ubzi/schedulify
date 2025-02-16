@@ -1,2 +1,5 @@
 Django
 Faker
+django-extensions
+networkx
+matplotlib

@@ -19,7 +19,7 @@ class Dependency(Model):
     dependent_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name = "dependent_task")
     precedent_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name = "precedent_task")
 
-class Recource(Model):
+class Employee(Model):
     id = models.AutoField(primary_key=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
