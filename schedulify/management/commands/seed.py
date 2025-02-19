@@ -178,6 +178,16 @@ class Command(BaseCommand):
             dependent_task = end,
             precedent_task = p
         )
+        Exclusion.objects.create(
+            project = test_project,
+            task1 = a,
+            task2 = b
+        )
+        Exclusion.objects.create(
+            project = test_project,
+            task1 = c,
+            task2 = g
+        )
 
 
     def handle(self, *args, **options):
