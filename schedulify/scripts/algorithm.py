@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 
 from schedulify.models import Project, Task, Dependency, Employee, Exclusion
 
-def get_longest_exclusion(graph, exclusion):
+def get_optimum_exclusion(graph, exclusion):
     temp1_graph = graph.copy()
     temp2_graph = graph.copy()
     temp1_graph.add_edge(exclusion.task1.name, exclusion.task2.name, weight = exclusion.task2.duration)
     temp2_graph.add_edge(exclusion.task2.name, exclusion.task1.name, weight = exclusion.task1.duration)
 
     if(nx.is_directed_acyclic_graph(temp1_graph) and nx.is_directed_acyclic_graph(temp2_graph)):
-        return max(temp1_graph, temp2_graph, key = nx.dag_longest_path_length)
+        return min(temp1_graph, temp2_graph, key = nx.dag_longest_path_length)
     
     elif(nx.is_directed_acyclic_graph(temp1_graph)):
         return temp1_graph
@@ -46,7 +46,7 @@ def create_graph(project):
     
     exclusions = Exclusion.objects.filter(project = project)
     for exclusion in exclusions:
-        graph = get_longest_exclusion(graph, exclusion)
+        graph = get_optimum_exclusion(graph, exclusion)
 
     return graph
 
