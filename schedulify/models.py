@@ -11,7 +11,8 @@ class Task(Model):
     id = models.AutoField(primary_key=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
-    duration = models.IntegerField()
+    min_estimated_duration = models.IntegerField()
+    max_estimated_duration = models.IntegerField()
 
 class Dependency(Model):
     id = models.AutoField(primary_key=True)
