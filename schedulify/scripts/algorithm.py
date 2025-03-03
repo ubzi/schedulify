@@ -9,6 +9,47 @@ import matplotlib.pyplot as plt
 
 from schedulify.models import Project, Task, Dependency, Employee, Exclusion
 
+def initialise(graph):
+    dist = dict()
+    predecessor = dict()
+
+    for i in range(len(graph)):
+        node = graph[i]
+        dist[node] = -1
+        predecessor[node] = -1
+
+    dist["Source"] = 0
+
+    return dist, predecessor
+
+def calculate_longest_path(graph):
+    topo_graph = list(nx.topological_sort(graph))
+    dist, predecessor = initialise(topo_graph)
+
+    for u in topo_graph:
+        for v in graph.neighbors(u):
+            if dist[v] < dist[u] + graph.get_edge_data(u, v)["weight"]:
+                dist[v] = dist[u] + graph.get_edge_data(u, v)["weight"]
+                predecessor[v] = u
+    
+    end_node = max(dist, key = dist.get)
+    path = []
+
+    while predecessor.get(end_node) != -1:
+        path.append(end_node)
+        end_node = predecessor.get(end_node)
+
+    path.append(end_node)
+    path.reverse()
+    
+    return path, max(dist.values())
+
+def get_longest_path(graph):
+    return calculate_longest_path(graph)[0]
+
+def get_longest_path_length(graph):
+    return calculate_longest_path(graph)[1]
+
 def get_optimum_exclusion(graph, estimate, exclusion):
     temp1_graph = graph.copy()
     temp2_graph = graph.copy()
@@ -16,7 +57,7 @@ def get_optimum_exclusion(graph, estimate, exclusion):
     temp2_graph.add_edge(exclusion.task2.name, exclusion.task1.name, weight = get_task_duration(exclusion.task1, estimate))
 
     if(nx.is_directed_acyclic_graph(temp1_graph) and nx.is_directed_acyclic_graph(temp2_graph)):
-        return min(temp1_graph, temp2_graph, key = nx.dag_longest_path_length)
+        return min(temp1_graph, temp2_graph, key = get_longest_path_length)
     
     elif(nx.is_directed_acyclic_graph(temp1_graph)):
         return temp1_graph
@@ -36,17 +77,12 @@ def create_graph(project, estimate):
     graph = nx.DiGraph()
     # get all tasks that do not depend on any other tasks
     start_tasks = Task.objects.filter(project = project, dependent_task__isnull = True)
-    # get all tasks that have no other tasks depending on them
-    end_tasks = Task.objects.filter(project = project, precedent_task__isnull = True)
     # add a source node and connect it to all start tasks
     for task in start_tasks:
         graph.add_edge("Source",task.name, weight = get_task_duration(task, estimate))
     # add all the dependencies to the graph as edges between tasks
     for dependency in dependencies:
         graph.add_edge(dependency.precedent_task.name,dependency.dependent_task.name, weight = get_task_duration(dependency.dependent_task, estimate))
-    # add a sink node and have all end tasks connect to it
-    for task in end_tasks:
-        graph.add_edge(task.name,"Sink", weight = 0)
 
     if (not nx.is_directed_acyclic_graph(graph)):
         return None
@@ -57,15 +93,14 @@ def create_graph(project, estimate):
 
     return graph
 
-def highlight_longest_path(graph, pos):
+def highlight_longest_path(graph, pos, longest_path):
     edge_list = []
-    longest_path = nx.dag_longest_path(graph)
     for i in range(0, len(longest_path) - 1):
         edge_list.append((longest_path[i], longest_path[i + 1]))
 
     nx.draw_networkx_edges(graph, pos, edgelist = edge_list, edge_color = 'r', arrows = True, width = 5)
 
-def create_graph_image(graph):
+def create_graph_image(graph, path):
     for layer, nodes in enumerate(nx.topological_generations(graph)):
         for node in nodes:
             graph.nodes[node]["layer"] = layer
@@ -73,28 +108,48 @@ def create_graph_image(graph):
     fig, ax = plt.subplots()
     nx.draw_networkx(graph, pos, with_labels=True, ax = ax, node_size = 1000)
     labels = nx.get_edge_attributes(graph,'weight')
-    highlight_longest_path(graph, pos)
+    highlight_longest_path(graph, pos, path)
     nx.draw_networkx_edge_labels(graph, pos, edge_labels = labels, ax = ax)
     fig.tight_layout()
 
-def show_graphs(min_graph, max_graph):
-    create_graph_image(min_graph)
-    create_graph_image(max_graph)
-    plt.show()
+def create_uniform_graph(graph):
+    topo_graph = list(nx.topological_sort(graph))
+    for node in topo_graph[1:]:
+        in_edges = graph.in_edges(node)
+        duration = graph.get_edge_data(*list(in_edges)[0])["weight"]
+        if duration != 1:
+            for edge in in_edges:
+                graph.add_edge(*edge, weight = 1)
+            start_node = node
+            for i in range(2, duration+1):
+                new_node = node + str(i)
+                graph.add_node(new_node)
+                graph.add_edge(start_node, new_node, weight = 1)
+                start_node = new_node
+    return graph
+        
 
 def run():
     project = Project.objects.get(name = "Test project")
     min_graph = create_graph(project, "min")
     max_graph = create_graph(project, "max")
 
-    print(nx.dag_longest_path(min_graph))
-    print(nx.dag_longest_path_length(min_graph))
+    path, length = calculate_longest_path(min_graph)
+    create_graph_image(min_graph, path)
+    print(length)
 
-    print(nx.dag_longest_path(max_graph))
-    print(nx.dag_longest_path_length(max_graph))
+    uniform = create_uniform_graph(min_graph)
+    path, length = calculate_longest_path(uniform)
+    create_graph_image(uniform, path)
 
-    print([generation for generation in nx.topological_generations(min_graph)])
 
-    show_graphs(min_graph, max_graph)
+    # path, length = calculate_longest_path(max_graph)
+    # create_graph_image(max_graph, path)
+    # print(length)
+
+    plt.show()
+
+    # print([generation for generation in nx.topological_generations(min_graph)])
+
 
         

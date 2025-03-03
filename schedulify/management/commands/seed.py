@@ -203,6 +203,70 @@ class Command(BaseCommand):
         # )
 
 
+
+    def create_resource_testcase(self):
+        test_project = Project.objects.create(
+            name = "Test project",
+            description = "test project",
+            start_date = datetime.datetime(2025, 1, 1)
+        )
+        a = Task.objects.create(
+            name = "A",
+            project = test_project,
+            min_estimated_duration = 1,
+            max_estimated_duration = 1
+        )
+        b = Task.objects.create(
+            name = "B",
+            project = test_project,
+            min_estimated_duration = 4,
+            max_estimated_duration = 4
+        )
+        c = Task.objects.create(
+            name = "C",
+            project = test_project,
+            min_estimated_duration = 1,
+            max_estimated_duration = 1
+        )
+        d = Task.objects.create(
+            name = "D",
+            project = test_project,
+            min_estimated_duration = 1,
+            max_estimated_duration = 1
+        )
+        e = Task.objects.create(
+            name = "E",
+            project = test_project,
+            min_estimated_duration = 2,
+            max_estimated_duration = 2
+        )
+
+        Dependency.objects.create(
+            project = test_project,
+            dependent_task = c,
+            precedent_task = a
+        )
+        Dependency.objects.create(
+            project = test_project,
+            dependent_task = d,
+            precedent_task = c
+        )
+        Dependency.objects.create(
+            project = test_project,
+            dependent_task = e,
+            precedent_task = c
+        )
+
+        Employee.objects.create(
+            project = test_project,
+            name = "John"
+        )
+        Employee.objects.create(
+            project = test_project,
+            name = "George"
+        )
+
     def handle(self, *args, **options):
         self.clear_data()
-        self.create_testcase()
+        # self.create_testcase()
+        self.create_resource_testcase()

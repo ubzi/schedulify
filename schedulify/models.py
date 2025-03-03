@@ -24,8 +24,8 @@ class Employee(Model):
     id = models.AutoField(primary_key=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     name = models.CharField(max_length=30)
-    available_start_time = models.DateTimeField()
-    available_end_time = models.DateTimeField()
+    # available_start_time = models.DateTimeField()
+    # available_end_time = models.DateTimeField()
 
 class Exclusion(Model):
     id = models.AutoField(primary_key=True)
