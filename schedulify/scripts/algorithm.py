@@ -18,7 +18,7 @@ def initialise(graph):
         dist[node] = -1
         predecessor[node] = -1
 
-    dist["Source"] = 0
+    dist[graph[0]] = 0
 
     return dist, predecessor
 
@@ -112,7 +112,9 @@ def create_graph_image(graph, path):
     nx.draw_networkx_edge_labels(graph, pos, edge_labels = labels, ax = ax)
     fig.tight_layout()
 
+
 def create_uniform_graph(graph):
+    #doesnt connect neighbours -- needs fixing!!!! 
     topo_graph = list(nx.topological_sort(graph))
     for node in topo_graph[1:]:
         in_edges = graph.in_edges(node)
@@ -121,13 +123,39 @@ def create_uniform_graph(graph):
             for edge in in_edges:
                 graph.add_edge(*edge, weight = 1)
             start_node = node
+
             for i in range(2, duration+1):
                 new_node = node + str(i)
                 graph.add_node(new_node)
                 graph.add_edge(start_node, new_node, weight = 1)
                 start_node = new_node
     return graph
-        
+
+def get_longest_path_length_from_source(graph, node):
+    subgraph = nx.subgraph(graph, nx.all_neighbors(graph, node))
+    return get_longest_path_length(subgraph)
+
+def create_resource_dependent_graph(project, graph):
+    graph = create_uniform_graph(graph)
+    generations = [generation for generation in nx.topological_generations(graph)]
+    #calculates the length of the longest list within the topological generation
+    #i.e. highest number of tasks that can be completed concurrently
+    max_concurrent_tasks = max(map(len, generations))
+    number_of_employees = Employee.objects.filter(project = project).count()
+    while max_concurrent_tasks > number_of_employees:
+        for i in range (0, len(generations)):
+            if len(generations[i]) > number_of_employees:
+                shortest_path_node = min(generations[i], key = lambda node: get_longest_path_length_from_source(graph, node))
+                other_nodes = [node for node in generations[i] if node != shortest_path_node]
+                shortest_path_node_2 = min(other_nodes, key = lambda node: get_longest_path_length_from_source(graph, node))
+                graph.add_edge(shortest_path_node, shortest_path_node_2, weight = 1)
+                generations = [generation for generation in nx.topological_generations(graph)]
+                max_concurrent_tasks = max(map(len, generations))
+
+
+
+
+    return graph
 
 def run():
     project = Project.objects.get(name = "Test project")
@@ -136,11 +164,13 @@ def run():
 
     path, length = calculate_longest_path(min_graph)
     create_graph_image(min_graph, path)
-    print(length)
+    print("optimimum time is: "+str(length))
 
-    uniform = create_uniform_graph(min_graph)
-    path, length = calculate_longest_path(uniform)
-    create_graph_image(uniform, path)
+    resource_graph = create_resource_dependent_graph(project, min_graph)
+    path, length = calculate_longest_path(resource_graph)
+    create_graph_image(resource_graph, path)
+    print("optimimum time under resource constraints is: "+str(length))
+
 
 
     # path, length = calculate_longest_path(max_graph)
