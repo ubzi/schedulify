@@ -114,12 +114,16 @@ def create_graph_image(graph, path):
 
 
 def create_uniform_graph(graph):
-    #doesnt connect neighbours -- needs fixing!!!! 
+    
     topo_graph = list(nx.topological_sort(graph))
     for node in topo_graph[1:]:
         in_edges = graph.in_edges(node)
         duration = graph.get_edge_data(*list(in_edges)[0])["weight"]
+        start_node = node
         if duration != 1:
+            neighbours = list(graph.neighbors(node))
+            out_edges = list(graph.edges(node, "weight"))
+            graph.remove_edges_from(out_edges)
             for edge in in_edges:
                 graph.add_edge(*edge, weight = 1)
             start_node = node
@@ -129,6 +133,10 @@ def create_uniform_graph(graph):
                 graph.add_node(new_node)
                 graph.add_edge(start_node, new_node, weight = 1)
                 start_node = new_node
+            
+            for _,dest,weight in out_edges:
+                graph.add_edge(start_node, dest, weight=weight)
+
     return graph
 
 def get_longest_path_length_from_source(graph, node):
@@ -165,6 +173,10 @@ def run():
     path, length = calculate_longest_path(min_graph)
     create_graph_image(min_graph, path)
     print("optimimum time is: "+str(length))
+
+    uniform_graph = create_uniform_graph(min_graph)
+    path, length = calculate_longest_path(uniform_graph)
+    create_graph_image(uniform_graph, path)
 
     resource_graph = create_resource_dependent_graph(project, min_graph)
     path, length = calculate_longest_path(resource_graph)
