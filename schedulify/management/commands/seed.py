@@ -26,26 +26,26 @@ class Command(BaseCommand):
             name = "begin",
             project = test_project,
             min_estimated_duration = 4,
-            max_estimated_duration = 4
+            max_estimated_duration = 6
         )
         a = Task.objects.create(
             name = "a",
             project = test_project,
             min_estimated_duration = 3,
-            max_estimated_duration = 4
+            max_estimated_duration = 7
 
         )
         b = Task.objects.create(
             name = "b",
             project = test_project,
             min_estimated_duration = 4,
-            max_estimated_duration = 5
+            max_estimated_duration = 4
         )
         e = Task.objects.create(
             name = "e",
             project = test_project,
             min_estimated_duration = 1,
-            max_estimated_duration = 2
+            max_estimated_duration = 4
         )
         g = Task.objects.create(
             name = "g",
@@ -63,7 +63,7 @@ class Command(BaseCommand):
             name = "h",
             project = test_project,
             min_estimated_duration = 7,
-            max_estimated_duration = 8
+            max_estimated_duration = 13
         )
         d = Task.objects.create(
             name = "d",
@@ -75,13 +75,13 @@ class Command(BaseCommand):
             name = "p",
             project = test_project,
             min_estimated_duration = 4,
-            max_estimated_duration = 5
+            max_estimated_duration = 11
         )
         f = Task.objects.create(
             name = "f",
             project = test_project,
             min_estimated_duration = 6,
-            max_estimated_duration = 7
+            max_estimated_duration = 9
         )
         q = Task.objects.create(
             name = "q",
@@ -93,7 +93,7 @@ class Command(BaseCommand):
             name = "end",
             project = test_project,
             min_estimated_duration = 3,
-            max_estimated_duration = 4
+            max_estimated_duration = 5
         )
 
         Dependency.objects.create(
@@ -201,6 +201,14 @@ class Command(BaseCommand):
         #     task1 = c,
         #     task2 = g
         # )
+        Employee.objects.create(
+            project = test_project,
+            name = "John"
+        )
+        Employee.objects.create(
+            project = test_project,
+            name = "George"
+        )
 
 
 
@@ -219,7 +227,7 @@ class Command(BaseCommand):
         b = Task.objects.create(
             name = "B",
             project = test_project,
-            min_estimated_duration = 4,
+            min_estimated_duration = 2,
             max_estimated_duration = 4
         )
         c = Task.objects.create(
@@ -240,6 +248,18 @@ class Command(BaseCommand):
             min_estimated_duration = 2,
             max_estimated_duration = 2
         )
+        # f = Task.objects.create(
+        #     name = "F",
+        #     project = test_project,
+        #     min_estimated_duration = 1,
+        #     max_estimated_duration = 1
+        # )
+        # g = Task.objects.create(
+        #     name = "G",
+        #     project = test_project,
+        #     min_estimated_duration = 1,
+        #     max_estimated_duration = 1
+        # )
 
         Dependency.objects.create(
             project = test_project,
@@ -256,6 +276,16 @@ class Command(BaseCommand):
             dependent_task = e,
             precedent_task = c
         )
+        # Dependency.objects.create(
+        #     project = test_project,
+        #     dependent_task = f,
+        #     precedent_task = e
+        # )
+        # Dependency.objects.create(
+        #     project = test_project,
+        #     dependent_task = g,
+        #     precedent_task = b
+        # )
 
         Employee.objects.create(
             project = test_project,

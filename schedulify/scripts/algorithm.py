@@ -143,13 +143,35 @@ def get_longest_path_length_from_source(graph, node):
     subgraph = nx.subgraph(graph, nx.all_neighbors(graph, node))
     return get_longest_path_length(subgraph)
 
-def create_resource_dependent_graph(project, graph):
-    graph = create_uniform_graph(graph)
+def calculate_length_of_resource_graph(n, graph):
+    resource_dependent_graph = create_resource_dependent_graph(n, graph)
+    _, length = calculate_longest_path(resource_dependent_graph)
+    return length
+
+def find_optimum_number_of_employees(graph):
+    graph = graph.copy()
+    generations = [generation for generation in nx.topological_generations(graph)]
+    #calculates the length of the longest list within the topological generation
+    #i.e. highest number of tasks that can be completed concurrently
+    number_of_employees = max(map(len, generations))
+    length = calculate_length_of_resource_graph(number_of_employees, graph)
+    while length == calculate_length_of_resource_graph(number_of_employees -1, graph):
+        number_of_employees -= 1
+    return number_of_employees
+
+
+def create_employees_dependent_graph(project, graph):
+    graph = graph.copy()
+    number_of_employees = Employee.objects.filter(project = project).count()
+    graph = create_resource_dependent_graph(number_of_employees, graph)
+    return graph
+
+def create_resource_dependent_graph(number_of_employees, graph):
+    graph = graph.copy()
     generations = [generation for generation in nx.topological_generations(graph)]
     #calculates the length of the longest list within the topological generation
     #i.e. highest number of tasks that can be completed concurrently
     max_concurrent_tasks = max(map(len, generations))
-    number_of_employees = Employee.objects.filter(project = project).count()
     while max_concurrent_tasks > number_of_employees:
         for i in range (0, len(generations)):
             if len(generations[i]) > number_of_employees:
@@ -160,38 +182,47 @@ def create_resource_dependent_graph(project, graph):
                 generations = [generation for generation in nx.topological_generations(graph)]
                 max_concurrent_tasks = max(map(len, generations))
 
-
-
-
     return graph
+
 
 def run():
     project = Project.objects.get(name = "Test project")
     min_graph = create_graph(project, "min")
     max_graph = create_graph(project, "max")
 
-    path, length = calculate_longest_path(min_graph)
+    path, min_length = calculate_longest_path(min_graph)
     create_graph_image(min_graph, path)
-    print("optimimum time is: "+str(length))
 
-    uniform_graph = create_uniform_graph(min_graph)
-    path, length = calculate_longest_path(uniform_graph)
-    create_graph_image(uniform_graph, path)
+    path, max_length = calculate_longest_path(max_graph)
+    create_graph_image(max_graph, path)
 
-    resource_graph = create_resource_dependent_graph(project, min_graph)
-    path, length = calculate_longest_path(resource_graph)
-    create_graph_image(resource_graph, path)
-    print("optimimum time under resource constraints is: "+str(length))
+    print("optimimum time is estimated to be between: "+str(min_length)+"-"+str(max_length)+" days")
 
+    uniform_min_graph = create_uniform_graph(min_graph)
+    uniform_max_graph = create_uniform_graph(max_graph)
 
+    optimum_max_number_of_employees = find_optimum_number_of_employees(uniform_max_graph)
+    optimum_min_number_of_employees = find_optimum_number_of_employees(uniform_min_graph)
+    print("optimimum number of employees is between: "+str(optimum_min_number_of_employees)+"-"+str(optimum_max_number_of_employees))
 
-    # path, length = calculate_longest_path(max_graph)
-    # create_graph_image(max_graph, path)
-    # print(length)
+    # resource_dependent_graph = create_resource_dependent_graph(optimum_min_number_of_employees, uniform_min_graph)
+    # path, length = calculate_longest_path(resource_dependent_graph)
+    # create_graph_image(resource_dependent_graph, path)
+    # resource_dependent_graph = create_resource_dependent_graph(optimum_max_number_of_employees, uniform_max_graph)
+    # path, length = calculate_longest_path(resource_dependent_graph)
+    # create_graph_image(resource_dependent_graph, path)
+
+    min_resource_graph = create_employees_dependent_graph(project, uniform_min_graph)
+    path, min_length = calculate_longest_path(min_resource_graph)
+    # create_graph_image(resource_graph, path)
+
+    max_resource_graph = create_employees_dependent_graph(project, uniform_max_graph)
+    path, max_length = calculate_longest_path(max_resource_graph)
+    # create_graph_image(resource_graph, path)
+    print("optimimum time under resource constraints is estimated to be between: "+str(min_length)+"-"+str(max_length)+" days")
 
     plt.show()
 
-    # print([generation for generation in nx.topological_generations(min_graph)])
 
 
         
