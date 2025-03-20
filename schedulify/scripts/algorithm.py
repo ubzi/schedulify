@@ -184,6 +184,18 @@ def create_resource_dependent_graph(number_of_employees, graph):
 
     return graph
 
+def output_schedule(graph):
+    day = 1
+    for generation in nx.topological_generations(graph):
+        print("Day "+str(day)+": "+str(generation))
+        day += 1
+
+def output_schedules(min_graph, max_graph):
+    print("--- Schedule for best case ---")
+    output_schedule(min_graph)
+    print("--- Schedule for worst case ---")
+    output_schedule(max_graph)
+
 
 def run():
     project = Project.objects.get(name = "Test project")
@@ -205,21 +217,16 @@ def run():
     optimum_min_number_of_employees = find_optimum_number_of_employees(uniform_min_graph)
     print("optimimum number of employees is between: "+str(optimum_min_number_of_employees)+"-"+str(optimum_max_number_of_employees))
 
-    # resource_dependent_graph = create_resource_dependent_graph(optimum_min_number_of_employees, uniform_min_graph)
-    # path, length = calculate_longest_path(resource_dependent_graph)
-    # create_graph_image(resource_dependent_graph, path)
-    # resource_dependent_graph = create_resource_dependent_graph(optimum_max_number_of_employees, uniform_max_graph)
-    # path, length = calculate_longest_path(resource_dependent_graph)
-    # create_graph_image(resource_dependent_graph, path)
-
     min_resource_graph = create_employees_dependent_graph(project, uniform_min_graph)
     path, min_length = calculate_longest_path(min_resource_graph)
-    # create_graph_image(resource_graph, path)
+    create_graph_image(min_resource_graph, path)
 
     max_resource_graph = create_employees_dependent_graph(project, uniform_max_graph)
     path, max_length = calculate_longest_path(max_resource_graph)
-    # create_graph_image(resource_graph, path)
+    create_graph_image(max_resource_graph, path)
     print("optimimum time under resource constraints is estimated to be between: "+str(min_length)+"-"+str(max_length)+" days")
+
+    output_schedules(min_resource_graph, max_resource_graph)
 
     plt.show()
 
