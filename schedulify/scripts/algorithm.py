@@ -186,7 +186,9 @@ def create_resource_dependent_graph(number_of_employees, graph):
 
 def output_schedule(graph):
     day = 1
-    for generation in nx.topological_generations(graph):
+    generations = iter(nx.topological_generations(graph))
+    next(generations)
+    for generation in generations:
         print("Day "+str(day)+": "+str(generation))
         day += 1
 
