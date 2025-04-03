@@ -129,7 +129,7 @@ def create_uniform_graph(graph):
             start_node = node
 
             for i in range(2, duration+1):
-                new_node = node + str(i)
+                new_node = str(node) +"(" + str(i) + ")"
                 graph.add_node(new_node)
                 graph.add_edge(start_node, new_node, weight = 1)
                 start_node = new_node
